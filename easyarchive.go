@@ -8,7 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
+
+	"github.com/jdockerty/easyarchive/md5calc"
 )
 
 const (
@@ -16,7 +19,8 @@ const (
 )
 
 type configArchive struct {
-	ArchiveLocation string `json:"Archive Location"`
+	ArchiveLocation string              `json:"Archive Location"`
+	Hashes          map[string][16]byte `json:"Hash Values"`
 }
 
 var (
@@ -33,7 +37,7 @@ func writeToConfigFile() {
 	fmt.Println("Writing to config.json...")
 
 	jsonString, _ := json.MarshalIndent(currentConfig, "", "\t")
-	ioutil.WriteFile("config.json", jsonString, os.ModePerm)
+	ioutil.WriteFile("config.json", jsonString, os.ModePerm|os.ModeAppend)
 }
 
 func setArchivePath(fp string) {
@@ -41,7 +45,6 @@ func setArchivePath(fp string) {
 	currentConfig.ArchiveLocation = cleanPath
 
 	fmt.Println("Archive path set to", currentConfig.ArchiveLocation)
-	writeToConfigFile()
 }
 
 func readUserInput() string {
@@ -76,12 +79,31 @@ func readConfigFile() configArchive {
 	return data
 }
 
+func calcHashes(archivepath string) {
+	m, err := md5calc.MD5All(archivepath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var paths []string
+	for path := range m {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	for _, path := range paths {
+		fmt.Printf("%x  %s\n", m[path], path)
+		// conf.Hashes[path] = m[path]
+		// fmt.Println(path)
+	}
+	// fmt.Println(conf.Hashes)
+}
+
 func main() {
 
 	conf := readConfigFile()
 
-	if len(conf.ArchiveLocation) > 0 {
-		fmt.Println("Path set")
+	if archivepath := conf.ArchiveLocation; len(archivepath) > 0 {
+		calcHashes(archivepath)
+
 	} else {
 		// Set the archive path and re-run the main function after writing to config.json
 
@@ -95,6 +117,7 @@ func main() {
 			filepath = strings.Replace(filepath, "\r\n", "", -1)
 
 			setArchivePath(filepath)
+			writeToConfigFile()
 			main()
 
 		} else if runningOS == "linux" {
@@ -105,6 +128,7 @@ func main() {
 			filepath = strings.Replace(filepath, "\n", "", -1)
 
 			setArchivePath(filepath)
+			writeToConfigFile()
 			main()
 		}
 	}
