@@ -149,15 +149,15 @@ func writeArchivePathToConfig(path string) {
 
 func main() {
 
-	conf := readConfigFile()
+	currentConfig = readConfigFile()
 
-	fmt.Println("start conf", conf)
+	fmt.Println("start conf", currentConfig)
 
-	if archivepath := conf.ArchiveLocation; len(archivepath) > 0 {
-		newH := calcHashes(conf)
-		if hashesChanged(conf.Hashes, newH) {
+	if archivepath := currentConfig.ArchiveLocation; len(archivepath) > 0 {
+		newH := calcHashes(currentConfig)
+		if hashesChanged(currentConfig.Hashes, newH) {
 			fmt.Println("Change detected, updating config.json...")
-			writeHashes(conf, newH)
+			writeHashes(currentConfig, newH)
 		} else {
 			fmt.Println("No action required.")
 		}
