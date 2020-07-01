@@ -167,7 +167,7 @@ func main() {
 		if hashesChanged(currentConfig.Hashes, newH) {
 			fmt.Println("Change detected, updating config.json...")
 			writeHashes(currentConfig, newH)
-			
+
 			fmt.Println("Archiving files...")
 			filenames := getFilenames(currentConfig.Hashes)
 			zipdir.ZipFiles(filenames, currentConfig.ArchiveLocation)
