@@ -15,12 +15,18 @@ import (
 )
 
 const (
-	runningOS = runtime.GOOS
+	runningOS  = runtime.GOOS
+	configFile = "config.json"
 )
 
+type hashVal struct {
+	Filename  string `json:"Filename"`
+	HashValue string `json:"Value"`
+}
+
 type configArchive struct {
-	ArchiveLocation string              `json:"Archive Location"`
-	Hashes          map[string][16]byte `json:"Hash Values"`
+	ArchiveLocation string    `json:"Archive Location"`
+	Hashes          []hashVal `json:"Hash Values"`
 }
 
 var (
@@ -28,22 +34,16 @@ var (
 )
 
 func createConfig() {
-	configFile, _ := os.Create("config.json")
+	configFile, _ := os.Create(configFile)
 	defer configFile.Close()
 }
 
-func writeToConfigFile() {
-
-	fmt.Println("Writing to config.json...")
-
-	jsonString, _ := json.MarshalIndent(currentConfig, "", "\t")
-	ioutil.WriteFile("config.json", jsonString, os.ModePerm|os.ModeAppend)
-}
 
 func setArchivePath(fp string) {
 	cleanPath := filepath.Clean(fp)
 	currentConfig.ArchiveLocation = cleanPath
 
+	writeArchivePathToConfig(cleanPath)
 	fmt.Println("Archive path set to", currentConfig.ArchiveLocation)
 }
 
@@ -59,51 +59,108 @@ func readUserInput() string {
 	return input
 }
 
-// func configFileExists(archivePath string) {
-// Check file exists, if not then create it.
-// }
 
 func readConfigFile() configArchive {
-	plan, err := ioutil.ReadFile("config.json")
+	configJSON, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		fmt.Println("Error reading file.")
-		panic(err)
+		createConfig()
 	}
 	var data configArchive
 
-	err = json.Unmarshal(plan, &data)
+	err = json.Unmarshal(configJSON, &data)
 	if err != nil {
-		return currentConfig
+		return data
 	}
 
 	return data
 }
 
-func calcHashes(archivepath string) {
-	m, err := md5calc.MD5All(archivepath)
+func calcHashes(conf configArchive) []hashVal {
+	m, err := md5calc.MD5All(conf.ArchiveLocation)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error running MD5All on archive path.")
+		panic(err)
 	}
+
 	var paths []string
 	for path := range m {
 		paths = append(paths, path)
 	}
+
 	sort.Strings(paths)
+	var tempNewHashes []hashVal
 	for _, path := range paths {
-		fmt.Printf("%x  %s\n", m[path], path)
-		// conf.Hashes[path] = m[path]
-		// fmt.Println(path)
+
+		// fmt.Printf("%x  %s\n", m[path], path)
+		basePath := filepath.Base(path)
+		hashString := fmt.Sprintf("%x", m[path])
+		hashHolder := hashVal{Filename: basePath, HashValue: hashString}
+		tempNewHashes = append(tempNewHashes, hashHolder)
 	}
-	// fmt.Println(conf.Hashes)
+	return tempNewHashes
+}
+
+func writeHashes(currentConf configArchive, new []hashVal) {
+	currentConf.Hashes = new
+
+	dataStream, _ := json.MarshalIndent(currentConf, "", "\t")
+	ioutil.WriteFile(configFile, dataStream, 0644)
+}
+
+func isEqualHash(old, new []hashVal) bool {
+	for i, v := range new {
+		if v.HashValue == old[i].HashValue {
+			continue
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func hashesChanged(oldHashes, newHashes []hashVal) bool {
+	// fmt.Println("old:", oldHashes)
+	// fmt.Println("new:", newHashes)
+
+	if len(newHashes) > len(oldHashes) {
+
+		return true
+
+	} else if len(newHashes) < len(oldHashes) {
+
+		return true
+
+	} else if isEqualHash(oldHashes, newHashes) == false {
+
+		return true
+
+	}
+
+	return false
+}
+
+func writeArchivePathToConfig(path string) {
+	currentConfig.ArchiveLocation = path
+	currentConfig.Hashes = nil
+
+	output, _ := json.MarshalIndent(currentConfig, "", "\t")
+	ioutil.WriteFile(configFile, output, 0644)
 }
 
 func main() {
 
 	conf := readConfigFile()
 
-	if archivepath := conf.ArchiveLocation; len(archivepath) > 0 {
-		calcHashes(archivepath)
+	fmt.Println("start conf", conf)
 
+	if archivepath := conf.ArchiveLocation; len(archivepath) > 0 {
+		newH := calcHashes(conf)
+		if hashesChanged(conf.Hashes, newH) {
+			fmt.Println("Change detected, updating config.json...")
+			writeHashes(conf, newH)
+		} else {
+			fmt.Println("No action required.")
+		}
 	} else {
 		// Set the archive path and re-run the main function after writing to config.json
 
@@ -117,7 +174,7 @@ func main() {
 			filepath = strings.Replace(filepath, "\r\n", "", -1)
 
 			setArchivePath(filepath)
-			writeToConfigFile()
+			// writeToConfigFile() CAN POSSIBILITY REMOVE THIS FUNCTION
 			main()
 
 		} else if runningOS == "linux" {
@@ -128,7 +185,7 @@ func main() {
 			filepath = strings.Replace(filepath, "\n", "", -1)
 
 			setArchivePath(filepath)
-			writeToConfigFile()
+
 			main()
 		}
 	}
