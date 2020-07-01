@@ -11,7 +11,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jdockerty/easyarchive/md5calc"
+	"github.com/jdockerty/easyarchive/internal/md5calc"
+	// "github.com/jdockerty/easyarchive/internal/glacierupload"
+	"github.com/jdockerty/easyarchive/internal/zipdir"
 )
 
 const (
@@ -38,7 +40,6 @@ func createConfig() {
 	defer configFile.Close()
 }
 
-
 func setArchivePath(fp string) {
 	cleanPath := filepath.Clean(fp)
 	currentConfig.ArchiveLocation = cleanPath
@@ -58,7 +59,6 @@ func readUserInput() string {
 
 	return input
 }
-
 
 func readConfigFile() configArchive {
 	configJSON, err := ioutil.ReadFile(configFile)
@@ -147,6 +147,15 @@ func writeArchivePathToConfig(path string) {
 	ioutil.WriteFile(configFile, output, 0644)
 }
 
+func getFilenames(val []hashVal) []string {
+	var files []string
+
+	for _, v := range val {
+		files = append(files, v.Filename)
+	}
+	return files
+}
+
 func main() {
 
 	currentConfig = readConfigFile()
@@ -158,6 +167,11 @@ func main() {
 		if hashesChanged(currentConfig.Hashes, newH) {
 			fmt.Println("Change detected, updating config.json...")
 			writeHashes(currentConfig, newH)
+			
+			fmt.Println("Archiving files...")
+			filenames := getFilenames(currentConfig.Hashes)
+			zipdir.ZipFiles(filenames, currentConfig.ArchiveLocation)
+
 		} else {
 			fmt.Println("No action required.")
 		}

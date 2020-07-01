@@ -16,3 +16,4 @@
 
 config.json
 testbackups/
+*.zip
