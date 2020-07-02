@@ -37,7 +37,11 @@ var (
 )
 
 func createConfig() {
-	configFile, _ := os.Create(configFile)
+	configFile, err := os.Create(configFile)
+	if err != nil {
+		fmt.Println("Error creating config.json.")
+		panic(err)
+	}
 	defer configFile.Close()
 }
 
@@ -49,7 +53,7 @@ func setArchivePathAndBucket(fp, bucket string) {
 	currentConfig.Hashes = nil
 
 	writeArchivePathAndBucketToConfig(cleanPath, bucket)
-	fmt.Println("Archive path set to", currentConfig.ArchiveLocation)
+	fmt.Println("Archive path set to", cleanPath)
 }
 
 func readUserInput() string {
@@ -135,10 +139,12 @@ func hashesChanged(oldHashes, newHashes []hashVal) bool {
 
 	} else if isEqualHash(oldHashes, newHashes) == false {
 
+		// Hashes have changed if they are not equal
 		return true
 
 	}
 
+	// All hashes are the same, no action needed.
 	return false
 }
 
@@ -181,13 +187,14 @@ func main() {
 
 			fmt.Println("Archiving files...")
 			filenames := getFilenames(currentConfig.Hashes)
-			outputZip := zipdir.ZipFiles(filenames, currentConfig.ArchiveLocation)
+			outputZip := zipdir.ZipFiles(filenames, archivepath)
 
 			glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
 
 		} else {
 			fmt.Println("No action required.")
-		}
+			}
+
 	} else {
 		// Set the archive path and re-run the main function after writing to config.json
 
