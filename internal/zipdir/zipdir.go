@@ -79,11 +79,13 @@ func timeStamp() string {
 }
 
 // ZipFiles will compress and zip the files contained within the set archive path from config.json.
-func ZipFiles(files []string, archivePath string) {
-	output := fmt.Sprintf("%s.zip", timeStamp())
+func ZipFiles(files []string, archivePath string) string {
+	outputFile := fmt.Sprintf("%s.zip", timeStamp())
 
-	if err := zipUp(output, files, archivePath); err != nil {
+	if err := zipUp(outputFile, files, archivePath); err != nil {
 		panic(err)
 	}
-	fmt.Println("Zipped File successfully:", output)
+	fmt.Println("Zipped File successfully:", outputFile)
+
+	return outputFile
 }

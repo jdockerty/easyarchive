@@ -11,8 +11,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jdockerty/easyarchive/internal/glacierupload"
 	"github.com/jdockerty/easyarchive/internal/md5calc"
-	// "github.com/jdockerty/easyarchive/internal/glacierupload"
 	"github.com/jdockerty/easyarchive/internal/zipdir"
 )
 
@@ -28,6 +28,7 @@ type hashVal struct {
 
 type configArchive struct {
 	ArchiveLocation string    `json:"Archive Location"`
+	BucketName      string    `json:"S3 Bucket"`
 	Hashes          []hashVal `json:"Hash Values"`
 }
 
@@ -40,11 +41,14 @@ func createConfig() {
 	defer configFile.Close()
 }
 
-func setArchivePath(fp string) {
+func setArchivePathAndBucket(fp, bucket string) {
 	cleanPath := filepath.Clean(fp)
-	currentConfig.ArchiveLocation = cleanPath
 
-	writeArchivePathToConfig(cleanPath)
+	currentConfig.ArchiveLocation = cleanPath
+	currentConfig.BucketName = bucket
+	currentConfig.Hashes = nil
+
+	writeArchivePathAndBucketToConfig(cleanPath, bucket)
 	fmt.Println("Archive path set to", currentConfig.ArchiveLocation)
 }
 
@@ -75,8 +79,8 @@ func readConfigFile() configArchive {
 	return data
 }
 
-func calcHashes(conf configArchive) []hashVal {
-	m, err := md5calc.MD5All(conf.ArchiveLocation)
+func calcHashes() []hashVal {
+	m, err := md5calc.MD5All(currentConfig.ArchiveLocation)
 	if err != nil {
 		fmt.Println("Error running MD5All on archive path.")
 		panic(err)
@@ -100,14 +104,15 @@ func calcHashes(conf configArchive) []hashVal {
 	return tempNewHashes
 }
 
-func writeHashes(currentConf configArchive, new []hashVal) {
-	currentConf.Hashes = new
+func writeHashes(new []hashVal) {
+	currentConfig.Hashes = new
 
-	dataStream, _ := json.MarshalIndent(currentConf, "", "\t")
+	dataStream, _ := json.MarshalIndent(currentConfig, "", "\t")
 	ioutil.WriteFile(configFile, dataStream, 0644)
 }
 
 func isEqualHash(old, new []hashVal) bool {
+	
 	for i, v := range new {
 		if v.HashValue == old[i].HashValue {
 			continue
@@ -119,8 +124,6 @@ func isEqualHash(old, new []hashVal) bool {
 }
 
 func hashesChanged(oldHashes, newHashes []hashVal) bool {
-	// fmt.Println("old:", oldHashes)
-	// fmt.Println("new:", newHashes)
 
 	if len(newHashes) > len(oldHashes) {
 
@@ -139,10 +142,7 @@ func hashesChanged(oldHashes, newHashes []hashVal) bool {
 	return false
 }
 
-func writeArchivePathToConfig(path string) {
-	currentConfig.ArchiveLocation = path
-	currentConfig.Hashes = nil
-
+func writeArchivePathAndBucketToConfig(path, bucket string) {
 	output, _ := json.MarshalIndent(currentConfig, "", "\t")
 	ioutil.WriteFile(configFile, output, 0644)
 }
@@ -156,22 +156,34 @@ func getFilenames(val []hashVal) []string {
 	return files
 }
 
+func archiveBucketExist() bool {
+	if len(currentConfig.BucketName) > 0 {
+		return true
+	}
+
+	return false
+}
+
 func main() {
 
 	currentConfig = readConfigFile()
 
-	fmt.Println("start conf", currentConfig)
+	// fmt.Println("start conf", currentConfig)
 
-	if archivepath := currentConfig.ArchiveLocation; len(archivepath) > 0 {
-		newH := calcHashes(currentConfig)
+	if archivepath := currentConfig.ArchiveLocation; len(archivepath) > 0 && archiveBucketExist() {
+
+		newH := calcHashes()
+		
 		if hashesChanged(currentConfig.Hashes, newH) {
-			fmt.Println("Change detected, updating config.json...")
-			writeHashes(currentConfig, newH)
+
+			fmt.Println("Change detected, writing new hashes to config.json...")
+			writeHashes(newH)
 
 			fmt.Println("Archiving files...")
 			filenames := getFilenames(currentConfig.Hashes)
-			zipdir.ZipFiles(filenames, currentConfig.ArchiveLocation)
-
+			outputZip := zipdir.ZipFiles(filenames, currentConfig.ArchiveLocation)
+			fmt.Println("End zip:", outputZip)
+			glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
 		} else {
 			fmt.Println("No action required.")
 		}
@@ -182,13 +194,15 @@ func main() {
 
 		if runningOS == "windows" {
 
-			fmt.Printf("Enter the file path of the folder you wish to use, e.g. 'C:\\Users\\Jack\\Desktop\\MyBackups'")
+			fmt.Println("Enter the file path of the folder you wish to use, e.g. 'C:\\Users\\Jack\\Desktop\\MyBackups'")
 
 			filepath := readUserInput()
 			filepath = strings.Replace(filepath, "\r\n", "", -1)
 
-			setArchivePath(filepath)
-			// writeToConfigFile() CAN POSSIBILITY REMOVE THIS FUNCTION
+			bucket := glacierupload.CreateBucket()
+
+			setArchivePathAndBucket(filepath, bucket)
+
 			main()
 
 		} else if runningOS == "linux" {
@@ -198,7 +212,9 @@ func main() {
 			filepath := readUserInput()
 			filepath = strings.Replace(filepath, "\n", "", -1)
 
-			setArchivePath(filepath)
+			bucket := glacierupload.CreateBucket()
+
+			setArchivePathAndBucket(filepath, bucket)
 
 			main()
 		}
