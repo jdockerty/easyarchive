@@ -112,7 +112,7 @@ func writeHashes(new []hashVal) {
 }
 
 func isEqualHash(old, new []hashVal) bool {
-	
+
 	for i, v := range new {
 		if v.HashValue == old[i].HashValue {
 			continue
@@ -173,7 +173,7 @@ func main() {
 	if archivepath := currentConfig.ArchiveLocation; len(archivepath) > 0 && archiveBucketExist() {
 
 		newH := calcHashes()
-		
+
 		if hashesChanged(currentConfig.Hashes, newH) {
 
 			fmt.Println("Change detected, writing new hashes to config.json...")
@@ -182,8 +182,9 @@ func main() {
 			fmt.Println("Archiving files...")
 			filenames := getFilenames(currentConfig.Hashes)
 			outputZip := zipdir.ZipFiles(filenames, currentConfig.ArchiveLocation)
-			fmt.Println("End zip:", outputZip)
+
 			glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
+
 		} else {
 			fmt.Println("No action required.")
 		}
