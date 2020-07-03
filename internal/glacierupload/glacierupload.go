@@ -84,7 +84,7 @@ func UploadArchive(bucket, zipFile string) {
 		Key:         aws.String(zipFile),
 		Body:        file,
 		ContentType: aws.String("application/zip"),
-		// StorageClass: aws.String("GLACIER"),
+		StorageClass: aws.String("GLACIER"),
 	})
 
 	if err != nil {

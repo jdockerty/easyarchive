@@ -29,7 +29,7 @@ type hashVal struct {
 type configArchive struct {
 	ArchiveLocation string    `json:"Archive Location"`
 	BucketName      string    `json:"S3 Bucket"`
-	Hashes          []hashVal `json:"Hash Values"`
+	Hashes          []hashVal `json:"Hashes"`
 }
 
 var (
@@ -37,6 +37,7 @@ var (
 )
 
 func createConfig() {
+
 	configFile, err := os.Create(configFile)
 	if err != nil {
 		fmt.Println("Error creating config.json.")
@@ -166,12 +167,22 @@ func archiveBucketExist() bool {
 	return false
 }
 
-func main() {
+func initialSetup(eol string) {
+	filepath := readUserInput()
+	filepath = strings.Replace(filepath, eol, "", -1)
 
+	bucket := glacierupload.CreateBucket()
+
+	setArchivePathAndBucket(filepath, bucket)
+
+	main()
+}
+
+
+func main() {
 	currentConfig = readConfigFile()
 
-	// fmt.Println("start conf", currentConfig)
-
+	// If archive path is set and an S3 bucket has been created in config.json, proceed.
 	if archivepath := currentConfig.ArchiveLocation; len(archivepath) > 0 && archiveBucketExist() {
 
 		newH := calcHashes()
@@ -185,7 +196,7 @@ func main() {
 			filenames := getFilenames(currentConfig.Hashes)
 			outputZip := zipdir.ZipFiles(filenames, archivepath)
 			fmt.Println("end", outputZip)
-			// glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
+			glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
 
 		} else {
 			fmt.Println("No action required.")
@@ -200,27 +211,15 @@ func main() {
 
 			fmt.Println("Enter the file path of the folder you wish to use, e.g. 'C:\\Users\\Jack\\Desktop\\MyBackups'")
 
-			filepath := readUserInput()
-			filepath = strings.Replace(filepath, "\r\n", "", -1)
+			initialSetup("\r\n")
 
-			bucket := glacierupload.CreateBucket()
-
-			setArchivePathAndBucket(filepath, bucket)
-
-			main()
 
 		} else if runningOS == "linux" {
 
 			fmt.Println("Enter the file path of the folder you wish to use, e.g. /home/jack/mybackupfolder")
 
-			filepath := readUserInput()
-			filepath = strings.Replace(filepath, "\n", "", -1)
-
-			bucket := glacierupload.CreateBucket()
-
-			setArchivePathAndBucket(filepath, bucket)
-
-			main()
+			initialSetup("\n")
+			
 		}
 	}
 }
