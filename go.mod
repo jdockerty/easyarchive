@@ -1,4 +1,4 @@
-module github.com/jdockerty/EasyArchive
+module github.com/jdockerty/easyarchive
 
 go 1.14
 

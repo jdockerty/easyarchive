@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jdockerty/EasyArchive/internal/glacierupload"
-	"github.com/jdockerty/EasyArchive/internal/md5calc"
-	"github.com/jdockerty/EasyArchive/internal/zipdir"
+	"github.com/jdockerty/easyarchive/internal/glacierupload"
+	"github.com/jdockerty/easyarchive/internal/md5calc"
+	"github.com/jdockerty/easyarchive/internal/zipdir"
 )
 
 const (

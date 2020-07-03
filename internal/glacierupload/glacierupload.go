@@ -12,7 +12,7 @@ import (
 	"os"
 	"log"
 
-	"github.com/jdockerty/EasyArchive/internal/zipdir"
+	"github.com/jdockerty/easyarchive/internal/zipdir"
 )
 
 func exitErrorf(msg string, args ...interface{}) {
