@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/jdockerty/easyarchive/internal/glacierupload"
 	"github.com/jdockerty/easyarchive/internal/md5calc"
@@ -57,6 +58,7 @@ func setArchivePathAndBucket(fp, bucket string) {
 	writeArchivePathAndBucketToConfig(cleanPath, bucket)
 	log.Println("Archive path set to", cleanPath)
 	log.Println("You may now place files into the set path and they will be archived into S3 Glacier upon running the program again.")
+	time.Sleep(2)
 }
 
 func readUserInput() string {

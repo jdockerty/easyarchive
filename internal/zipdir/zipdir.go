@@ -88,7 +88,7 @@ func ZipFiles(files []string, archivePath string) string {
 	if err := zipUp(outputFile, files, archivePath); err != nil {
 		panic(err)
 	}
-	log.Println("Zipped File successfully:", outputFile)
+	log.Println("Zip file successfully created:", outputFile)
 
 	return outputFile
 }
