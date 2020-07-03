@@ -1,6 +1,7 @@
 package glacierupload
 
 import (
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -9,6 +10,7 @@ import (
 
 	"fmt"
 	"os"
+	"log"
 
 	"github.com/jdockerty/easyarchive/internal/zipdir"
 )
@@ -36,7 +38,7 @@ func s3Session() (*session.Session, *s3.S3) {
 // This returns the bucketName to write into the config.json file.
 func CreateBucket() string {
 
-	fmt.Println("An S3 bucket is not present, creating a new one for you in the form of easyarchive-[random_ID_suffix].")
+	log.Println("An S3 bucket is not present, creating a new one for you in the form of easyarchive-[random_ID_suffix].")
 
 	randomIDSuffix := uuid.New().String()
 	bucketName := fmt.Sprintf("easyarchive-%s", randomIDSuffix)
@@ -51,7 +53,7 @@ func CreateBucket() string {
 	}
 
 	// Wait until bucket is created before finishing
-	fmt.Printf("Waiting for bucket %q to be created...\n", bucketName)
+	log.Printf("Waiting for bucket %q to be created...\n", bucketName)
 
 	err = svc.WaitUntilBucketExists(&s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
@@ -60,7 +62,7 @@ func CreateBucket() string {
 		exitErrorf("Error occurred while waiting for bucket to be created, %v", bucketName)
 	}
 
-	fmt.Printf("Bucket %q successfully created\n", bucketName)
+	log.Printf("Bucket %q successfully created\n", bucketName)
 
 	return bucketName
 }
@@ -92,5 +94,5 @@ func UploadArchive(bucket, zipFile string) {
 		exitErrorf("Unable to upload %q to %q, %v", zipFile, bucket, err)
 	}
 
-	fmt.Printf("Successfully uploaded %q to %q\n", zipFile, bucket)
+	log.Printf("Successfully uploaded %q to %q\n", zipFile, bucket)
 }

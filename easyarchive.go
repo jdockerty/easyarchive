@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -40,7 +41,7 @@ func createConfig() {
 
 	configFile, err := os.Create(configFile)
 	if err != nil {
-		fmt.Println("Error creating config.json.")
+		log.Println("Error creating config.json.")
 		panic(err)
 	}
 	defer configFile.Close()
@@ -54,7 +55,8 @@ func setArchivePathAndBucket(fp, bucket string) {
 	currentConfig.Hashes = nil
 
 	writeArchivePathAndBucketToConfig(cleanPath, bucket)
-	fmt.Println("Archive path set to", cleanPath)
+	log.Println("Archive path set to", cleanPath)
+	log.Println("You may now place files into the set path and they will be archived into S3 Glacier upon running the program again.")
 }
 
 func readUserInput() string {
@@ -62,7 +64,7 @@ func readUserInput() string {
 
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		fmt.Println("Error reading user input string")
+		log.Println("Error reading user input string")
 		panic(err)
 	}
 
@@ -87,7 +89,7 @@ func readConfigFile() configArchive {
 func calcHashes() []hashVal {
 	m, err := md5calc.MD5All(currentConfig.ArchiveLocation)
 	if err != nil {
-		fmt.Println("Error running MD5All on archive path.")
+		log.Println("Error running MD5All on archive path.")
 		panic(err)
 	}
 
@@ -189,34 +191,33 @@ func main() {
 
 		if hashesChanged(currentConfig.Hashes, newH) {
 
-			fmt.Println("Change detected, writing new hashes to config.json...")
+			log.Println("Change detected, writing new hashes to config.json...")
 			writeHashes(newH)
 
-			fmt.Println("Archiving files...")
+			log.Println("Archiving files...")
 			filenames := getFilenames(currentConfig.Hashes)
 			outputZip := zipdir.ZipFiles(filenames, archivepath)
-			fmt.Println("end", outputZip)
 			glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
 
 		} else {
-			fmt.Println("No action required.")
+			log.Println("No action required.")
 			}
 
 	} else {
 		// Set the archive path and re-run the main function after writing to config.json
 
-		fmt.Println("The archive file path is not set.")
+		log.Println("The archive file path is not set.")
 
 		if runningOS == "windows" {
 
-			fmt.Println("Enter the file path of the folder you wish to use, e.g. 'C:\\Users\\Jack\\Desktop\\MyBackups'")
+			log.Println("Enter the file path of the folder you wish to use, e.g. 'C:\\Users\\Jack\\Desktop\\MyBackups'")
 
 			initialSetup("\r\n")
 
 
 		} else if runningOS == "linux" {
 
-			fmt.Println("Enter the file path of the folder you wish to use, e.g. /home/jack/mybackupfolder")
+			log.Println("Enter the file path of the folder you wish to use, e.g. /home/jack/mybackupfolder")
 
 			initialSetup("\n")
 			

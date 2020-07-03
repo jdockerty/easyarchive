@@ -4,11 +4,13 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
 )
 
+// PathSeparator returns the appropriate separator, either / or \, depending on Windows or Linux OS.
 func PathSeparator() string {
 	return string(filepath.Separator)
 }
@@ -86,7 +88,7 @@ func ZipFiles(files []string, archivePath string) string {
 	if err := zipUp(outputFile, files, archivePath); err != nil {
 		panic(err)
 	}
-	fmt.Println("Zipped File successfully:", outputFile)
+	log.Println("Zipped File successfully:", outputFile)
 
 	return outputFile
 }
