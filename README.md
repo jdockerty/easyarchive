@@ -1,13 +1,22 @@
 # Easy Archive
-A simple archive program to upload files into AWS S3 Glacier from a designated backups folder.
+An archive program to upload files into AWS S3 Glacier from a designated backups folder.
+
+This will calculate the hashes of specific files and re-zip when changes occur, uploading a new archive.
+
+It is assumed that archives are not run incredibly frequently, such as every 30 minutes, so archives are labelled with the current date in the format DD-MM-YY.
 
 ## Install
 
-Firstly, ensure that your AWS credentials are set. If you're running on an EC2 instance, then ensure it has the appropriate IAM role with permissions to create a bucket and write to S3.
-
+Firstly, ensure that your AWS credentials are set as this program uses the Go SDK. If running on an EC2 instance, make sure it has the appropriate IAM role with permissions to create a bucket and write to S3.
+```
+go get github.com/jdockerty/EasyArchive
+```
+OR
 ```
 git clone https://github.com/jdockerty/EasyArchive.git
 cd EasyArchive
 go mod download
 go build -v easyarchive.go
 ```
+
+Once build, you can use the program as required for the specific OS. `./easyarchive` on Linux and `easyarchive.exe` on Windows. Placing the executable within your PATH variable will enable easy access from the command line.
