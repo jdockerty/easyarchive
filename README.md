@@ -14,7 +14,7 @@ go get github.com/jdockerty/easyarchive
 OR
 ```
 git clone https://github.com/jdockerty/easyarchive.git
-cd EasyArchive
+cd easyarchive
 go mod download
 go build -v easyarchive.go
 ```
