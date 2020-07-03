@@ -9,6 +9,8 @@ import (
 
 	"fmt"
 	"os"
+
+	"github.com/jdockerty/easyarchive/internal/zipdir"
 )
 
 func exitErrorf(msg string, args ...interface{}) {
@@ -68,7 +70,7 @@ func UploadArchive(bucket, zipFile string) {
 
 	sess, _ := s3Session()
 
-	file, err := os.Open(zipFile)
+	file, err := os.Open("archives" + zipdir.PathSeparator() + zipFile)
 	if err != nil {
 		exitErrorf("Unable to open file %q, %v", err)
 	}

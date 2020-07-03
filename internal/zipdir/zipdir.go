@@ -9,16 +9,17 @@ import (
 	"time"
 )
 
-func pathSepartor() string {
+func PathSeparator() string {
 	return string(filepath.Separator)
 }
 
 // ZipFiles compresses one or many files into a single zip archive file.
 // Param 1: filename is the output zip file's name.
 // Param 2: files is a list of files to add to the zip.
+// Param 3: Location of the archive to attach onto the param 2.
 func zipUp(filename string, files []string, archivePath string) error {
 
-	newZipFile, err := os.Create(filename)
+	newZipFile, err := os.Create("archives" + PathSeparator() + filename)
 	if err != nil {
 		return err
 	}
@@ -38,7 +39,7 @@ func zipUp(filename string, files []string, archivePath string) error {
 }
 
 func addFileToZip(zipWriter *zip.Writer, filename string, archivePath string) error {
-	fileString := fmt.Sprintf("%s%s%s", archivePath, pathSepartor(), filename)
+	fileString := fmt.Sprintf("%s%s%s", archivePath, PathSeparator(), filename)
 	fileToZip, err := os.Open(fileString)
 	if err != nil {
 		return err

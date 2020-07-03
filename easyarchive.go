@@ -129,11 +129,7 @@ func isEqualHash(old, new []hashVal) bool {
 
 func hashesChanged(oldHashes, newHashes []hashVal) bool {
 
-	if len(newHashes) > len(oldHashes) {
-
-		return true
-
-	} else if len(newHashes) < len(oldHashes) {
+	if len(oldHashes) != len(newHashes) {
 
 		return true
 
@@ -188,8 +184,8 @@ func main() {
 			fmt.Println("Archiving files...")
 			filenames := getFilenames(currentConfig.Hashes)
 			outputZip := zipdir.ZipFiles(filenames, archivepath)
-
-			glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
+			fmt.Println("end", outputZip)
+			// glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
 
 		} else {
 			fmt.Println("No action required.")
