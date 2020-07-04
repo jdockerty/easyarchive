@@ -9,10 +9,6 @@ It is assumed that archives are not run incredibly frequently, such as every 30 
 
 Firstly, ensure that your AWS credentials are set as this program uses the Go SDK. If running on an EC2 instance, make sure it has the appropriate IAM role with permissions to create a bucket and write to S3.
 ```
-go get github.com/jdockerty/easyarchive
-```
-OR
-```
 git clone https://github.com/jdockerty/easyarchive.git
 cd easyarchive
 go mod download
