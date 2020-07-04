@@ -58,7 +58,7 @@ func setArchivePathAndBucket(fp, bucket string) {
 	writeArchivePathAndBucketToConfig(cleanPath, bucket)
 	log.Println("Archive path set to", cleanPath)
 	log.Println("You may now place files into the set path and they will be archived into S3 Glacier upon running the program again.")
-	time.Sleep(2)
+	time.Sleep(2 * time.Second)
 }
 
 func readUserInput() string {
