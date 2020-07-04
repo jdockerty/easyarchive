@@ -202,7 +202,7 @@ func main() {
 			glacierupload.UploadArchive(currentConfig.BucketName, outputZip)
 
 		} else {
-			log.Println("No action required.")
+			log.Println("No changes detected.")
 			}
 
 	} else {
