@@ -3,7 +3,7 @@ An archive program to upload files into AWS S3 Glacier from a designated backups
 
 This will calculate the hashes of specific files within the folder and re-zip when changes occur, uploading a new zip archive.
 
-It is assumed that archives are not run incredibly frequently, such as every 30 minutes, so archives are labelled with the current date in the format DD-MM-YY.
+It is assumed that archives are not run incredibly frequently, such as every 30 minutes, so archives are labelled with the current date in the format DD-MM-YYYY.
 
 ## Install
 
@@ -19,4 +19,4 @@ go mod download
 go build -v easyarchive.go
 ```
 
-Once built, you can use the program as required for the specific OS. `./easyarchive` on Linux and `easyarchive.exe` on Windows. Placing the executable within your PATH variable will enable easy access from the command line.
+Once built, you can use the program as required for the specific OS. `./easyarchive` on Linux and `easyarchive.exe` on Windows. Placing the executable within your PATH variable will enable easy access from the command line. You can also execute the binary via cron for scheduled backups to be run at set intervals.
